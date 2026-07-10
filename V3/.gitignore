@@ -139,7 +139,7 @@ dmypy.json
 cython_debug/
 
 .vscode
-
+.idea
 LovaszSoftmax
 inputs/*
 models/*
