@@ -75,7 +75,9 @@ pip install -r environment/environment_requirement.txt
     │       ├── model.onnx         # ONNX 模型
     │       ├── config.yml         # 训练配置
     │       └── log.csv            # 训练日志
-    └── outputs/                   # 分割结果
+    ├── outputs/                   # 分割结果
+    └── deployment/               # ESP32 边缘部署
+        └── esp32/                → 详见下方 ESP32 边缘部署 章节
 ```
 
 ## 模型架构
@@ -179,6 +181,53 @@ python export_onnx.py --name Kvasir_SEG2026_MobileNestedUNetv3_woDS
 |------|------|--------|
 | `--opset` | ONNX opset 版本 | `11` |
 | `--dynamic_batch` | 导出动态 batch size | `false` |
+
+## ESP32 边缘部署
+
+完整的端到端部署管线：PyTorch QAT → ESP-PPQ INT8 量化 → ESP-DL flatbuffer → ESP32-S3 硬件推理。
+
+```bash
+# 1. 搭建部署环境
+cd V3/deployment/esp32
+双击 setup_env.bat           # 安装 PC 端 Python 依赖
+conda activate esp32
+
+# 2. 量化导出
+python convert_to_espdl.py   # QAT 模型 → ESP-DL INT8 flatbuffer
+
+# 3. 烧录固件
+双击 esp32_inference/mobilenet/_build_now.bat   # 编译固件
+双击 esp32_inference/mobilenet/_flash_now.bat   # 烧录到 ESP32
+
+# 4. 硬件推理测试
+python _run_test.py          # 200 张图像 ESP32 推理 + IoU 评估
+```
+
+### 部署目录结构
+
+```
+V3/deployment/esp32/
+├── convert_to_espdl.py              # PyTorch → ESP-DL INT8 量化导出
+├── _run_test.py                     # ESP32 硬件推理测试 (921600 baud UART)
+├── _validate_full_testset.py        # PC 端 PPQ INT8 仿真验证
+├── _fp32_baseline.py                # FP32 模型基线测试
+├── _pc_int8_vs_gt.py                # PC INT8 vs GT 对比
+├── generate_test_data.py            # 测试数据生成
+├── setup_env.bat                    # PC 端环境一键搭建
+├── test_data/                       # 200 张 Kvasir-SEG 测试集
+├── esp32_inference/
+│   ├── model/                       # ESP-DL flatbuffer 模型 (model.espdl)
+│   └── mobilenet/
+│       ├── main/main.cpp            # ESP32 固件源码 (C++/FreeRTOS)
+│       ├── _build_now.bat           # ESP-IDF 编译脚本
+│       ├── _flash_now.bat           # 烧录脚本
+│       ├── partitions.csv           # Flash 分区表
+│       └── pack_storage_bin.py      # 存储分区打包
+├── IMPLEMENTATION_LOG.md            # 实施日志与问题记录
+└── README.md                        # 详细部署文档
+```
+
+> 详细说明见 `V3/deployment/esp32/README.md`
 
 ## 评估指标
 
