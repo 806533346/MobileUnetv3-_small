@@ -28,6 +28,6 @@ output/
 *_test*.onnx
 
 # Deployment large files (generated)
-deployment/test_data/
+**/test_data/
 *.pdf
 DEPLOYMENT_GUIDE.pdf
