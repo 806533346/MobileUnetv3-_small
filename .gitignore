@@ -1,1 +1,29 @@
 .idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Build artifacts
+build/
+*.o
+*.bin
+*.elf
+*.map
+
+# Test outputs
+test_results.json
+test_results.txt
+*.log
+stream_output.txt
+
+# Temp/scratch files
+output/
+*_test*.espdl
+*_test*.info
+*_test*.json
+*_test*.onnx
+
+# Deployment large files (generated)
+deployment/test_data/
