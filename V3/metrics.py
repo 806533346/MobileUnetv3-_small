@@ -1,6 +1,17 @@
 """
 评估指标: IoU, Dice, Recall, Specificity, Precision, F1, F2
-所有函数接受 sigmoid 之前的 logits, 内部自动做 sigmoid
+
+===== 输入格式 =====
+所有函数接受 sigmoid 之前的 raw logits (任意值域) 和 GT mask (0/1 二值)。
+内部自动执行: logits → sigmoid → >0.5 阈值 → 二值预测
+
+===== 指标说明 =====
+- IoU (Jaccard): |A∩B| / |A∪B|, 最常用的分割指标
+- Dice (F1):     2|A∩B| / (|A|+|B|), 对不平衡更鲁棒
+- Recall:        TP / (TP+FN), 漏检率 (高 → 少漏)
+- Specificity:   TN / (TN+FP), 误检率 (高 → 少误)
+- Precision:     TP / (TP+FP), 预测阳性中真阳比例
+- F2:            加权召回率 (beta=2), 漏检代价 > 误检代价
 """
 import numpy as np
 import torch
@@ -8,13 +19,13 @@ import torch.nn.functional as F
 
 
 def iou_score(output, target):
-    """IoU (Jaccard): 交集 / 并集, 阈值 0.5"""
+    """IoU (Jaccard Index): TP/(TP+FP+FN), 阈值 0.5"""
     smooth = 1e-5
     if torch.is_tensor(output):
-        output = torch.sigmoid(output).data.cpu().numpy()
+        output = torch.sigmoid(output).data.cpu().numpy()   # logits → prob
     if torch.is_tensor(target):
         target = target.data.cpu().numpy()
-    output_ = output > 0.5
+    output_ = output > 0.5                                   # 二值化
     target_ = target > 0.5
     intersection = (output_ & target_).sum()
     union = (output_ | target_).sum()
@@ -22,7 +33,7 @@ def iou_score(output, target):
 
 
 def dice_coef(output, target):
-    """Dice 系数: 2 * |A∩B| / (|A|+|B|)"""
+    """Dice 系数 (与 F1 等价): 2|A∩B| / (|A|+|B|)"""
     smooth = 1e-5
     output = torch.sigmoid(output).view(-1).data.cpu().numpy()
     target = target.view(-1).data.cpu().numpy()
@@ -31,7 +42,7 @@ def dice_coef(output, target):
 
 
 def recall(output, target):
-    """召回率: TP / (TP + FN)"""
+    """召回率 (Sensitivity): TP / (TP+FN) — 正样本中有多少被正确检测"""
     smooth = 1e-5
     output = torch.sigmoid(output).view(-1).data.cpu().numpy()
     target = target.view(-1).data.cpu().numpy()
@@ -41,7 +52,7 @@ def recall(output, target):
 
 
 def specificity(output, target):
-    """特异度: TN / (TN + FP)"""
+    """特异度: TN / (TN+FP) — 负样本中有多少被正确排除"""
     smooth = 1e-5
     output = torch.sigmoid(output).view(-1).data.cpu().numpy()
     target = target.view(-1).data.cpu().numpy()
@@ -51,7 +62,7 @@ def specificity(output, target):
 
 
 def precision(output, target):
-    """精确率: TP / (TP + FP)"""
+    """精确率: TP / (TP+FP) — 阳性预测中有多少是真阳"""
     smooth = 1e-5
     output = torch.sigmoid(output).view(-1).data.cpu().numpy()
     target = target.view(-1).data.cpu().numpy()
@@ -61,7 +72,7 @@ def precision(output, target):
 
 
 def f1_score(output, target):
-    """F1: 精确率和召回率的调和平均"""
+    """F1: 精确率和召回率的调和平均 = 2*P*R/(P+R)"""
     smooth = 1e-5
     recall_val = recall(output, target)
     precision_val = precision(output, target)
@@ -69,7 +80,8 @@ def f1_score(output, target):
 
 
 def f2_score(output, target, beta=2):
-    """F2: 召回率权重更高 (beta=2), 适合漏检代价大的场景"""
+    """F2 (加权 F-score): 召回率权重 = beta²×precision。
+    beta=2 → 召回率权重是精确率的 4 倍, 适合"宁可误检不可漏检"的息肉检测场景"""
     smooth = 1e-5
     recall_val = recall(output, target)
     precision_val = precision(output, target)

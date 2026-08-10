@@ -41,8 +41,7 @@ class MobileUNetV3(nn.Module):
     def __init__(self, num_classes, input_channels=3, act=nn.Hardswish,**kwargs):
         super().__init__()
 
-        # 上采样: 双线性插值, 2倍放大
-        self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+        self.up = nn.Upsample(scale_factor=2, mode='nearest')
 
         # stem: 步长2的卷积, 直接下采样到 1/2
         self.conv1 = nn.Conv2d(input_channels, 16, kernel_size=3, stride=2, padding=1, bias=False)
@@ -107,7 +106,7 @@ class MobileNestedUNetv3(nn.Module):
         nb_filter = [3, 16, 16, 24, 48, 96]
         self.deep_supervision = deep_supervision
 
-        self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+        self.up = nn.Upsample(scale_factor=2, mode='nearest')
 
         # stem: 步长2卷积, 下采样到 1/2
         self.conv1 = nn.Conv2d(input_channels, 16, kernel_size=3, stride=2, padding=1, bias=False)

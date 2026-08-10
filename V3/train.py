@@ -54,9 +54,9 @@ def parse_args():
                         help='input channels')
     parser.add_argument('--num_classes', default=1, type=int,
                         help='number of classes')
-    parser.add_argument('--input_w', default=384, type=int,
+    parser.add_argument('--input_w', default=256, type=int,
                         help='image width')
-    parser.add_argument('--input_h', default=320, type=int,
+    parser.add_argument('--input_h', default=256, type=int,
                         help='image height')
 
     # loss

@@ -60,10 +60,9 @@ def main():
 
     onnx_path = os.path.join('models', args.name, 'model.onnx')
 
-    # 动态 batch: 导出时 batch 维度标记为 dynamic
-    dynamic_axes = None
-    if args.dynamic_batch:
-        dynamic_axes = {'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}}
+    # batch + spatial 维度全部标记为 dynamic, 支持任意尺寸推理
+    dynamic_axes = {'input': {0: 'batch', 2: 'height', 3: 'width'},
+                    'output': {0: 'batch', 2: 'height', 3: 'width'}}
 
     torch.onnx.export(
         model,
@@ -74,6 +73,7 @@ def main():
                       else ['output_%d' % i for i in range(4)],
         dynamic_axes=dynamic_axes,
         opset_version=args.opset,
+        dynamo=False,
     )
 
     print(f'saved to {onnx_path}')
