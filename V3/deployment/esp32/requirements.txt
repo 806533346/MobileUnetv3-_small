@@ -1,0 +1,13 @@
+# ESP32 deployment PC-side dependencies
+# Install: pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cpu
+
+torch
+torchvision
+esp-ppq
+opencv-python
+albumentations
+pyserial
+tqdm
+pyyaml
+pillow
+numpy
