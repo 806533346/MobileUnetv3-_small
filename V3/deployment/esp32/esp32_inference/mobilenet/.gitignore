@@ -6,12 +6,13 @@
 # Directory metadata
 .directory
 
-# Temporary files
+# Temporary and test files
 *~
 *.swp
 *.swo
 *.bak
 *.tmp
+*_test.cpp
 
 # Log files
 *.log
@@ -23,6 +24,8 @@ build/
 *.a
 *.out
 *.exe # For any host-side utilities compiled on Windows
+stderr.txt
+stdout.txt
 
 # ESP-IDF specific build outputs
 *.bin
@@ -33,12 +36,9 @@ sdkconfig.old
 sdkconfig
 
 # ESP-IDF dependencies
-# For older versions or manual component management
-/components/.idf/
-**/components/.idf/
-# For modern ESP-IDF component manager
+components/
+mbedtls/
 managed_components/
-# If ESP-IDF tools are installed/referenced locally to the project
 .espressif/
 
 # CMake generated files
